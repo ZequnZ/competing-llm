@@ -2,6 +2,7 @@ import os
 
 from pydantic import (
     Field,
+    SecretStr,
 )
 from pydantic_settings import (
     BaseSettings,
@@ -110,6 +111,18 @@ class Settings(BasicSettings):
     log_format: str = Field(
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         description="Log format string",
+    )
+
+    azure_openai_api_key: SecretStr = Field(
+        default=SecretStr(""),
+        description="azure_openai_api_key, used only for local development",
+    )
+    azure_openai_endpoint: SecretStr = Field(
+        default=SecretStr(""),
+        description="azure_openai_endpoint",
+    )
+    azure_openai_api_version: str = Field(
+        default="2025-04-01-preview", description="azure_openai_api_version"
     )
 
 

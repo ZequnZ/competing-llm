@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchLLMs, fetchBatchCompletion } from './api/client'
+import { fetchLLMs, fetchCompletion } from './api/client'
 import type { LLMInfo, ChatResponse } from './api/client'
 import { LLMSelector } from './components/LLMSelector'
 import { ChatInput } from './components/ChatInput'
@@ -7,10 +7,10 @@ import { ResponseGrid } from './components/ResponseGrid'
 
 function App() {
   const [llms, setLlms] = useState<LLMInfo[]>([])
-  const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [prompt, setPrompt] = useState('')
-  const [responses, setResponses] = useState<Record<number, ChatResponse>>({})
-  const [loading, setLoading] = useState(false)
+  const [responses, setResponses] = useState<Record<string, ChatResponse>>({})
+  const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({})
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -22,7 +22,7 @@ function App() {
       })
   }, [])
 
-  const handleToggleLLM = (id: number) => {
+  const handleToggleLLM = (id: string) => {
     setSelectedIds(prev => 
       prev.includes(id) 
         ? prev.filter(i => i !== id) 
@@ -33,24 +33,45 @@ function App() {
   const handleSubmit = async () => {
     if (!prompt.trim() || selectedIds.length === 0) return
     
-    setLoading(true)
     setResponses({}) // Clear previous responses
     setError(null)
+    
+    // Initialize loading states for all selected models
+    const initialLoadingStates: Record<string, boolean> = {}
+    selectedIds.forEach(id => {
+      initialLoadingStates[id] = true
+    })
+    setLoadingStates(initialLoadingStates)
 
-    try {
-      const results = await fetchBatchCompletion(prompt, selectedIds)
-      const newResponses: Record<number, ChatResponse> = {}
-      results.forEach(r => {
-        newResponses[r.llm_id] = r
-      })
-      setResponses(newResponses)
-    } catch (err) {
-      setError('Failed to fetch responses')
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
+    // Fire off requests in parallel
+    selectedIds.forEach(async (llmId) => {
+      try {
+        const response = await fetchCompletion(prompt, llmId)
+        setResponses(prev => ({
+          ...prev,
+          [llmId]: response
+        }))
+      } catch (err) {
+        console.error(`Error fetching ${llmId}:`, err)
+        setResponses(prev => ({
+          ...prev,
+          [llmId]: {
+            llm_id: llmId,
+            content: '',
+            timestamp: new Date().toISOString(),
+            error: 'Failed to fetch response'
+          }
+        }))
+      } finally {
+        setLoadingStates(prev => ({
+          ...prev,
+          [llmId]: false
+        }))
+      }
+    })
   }
+
+  const isAnyLoading = Object.values(loadingStates).some(Boolean)
 
   return (
     <div className="container mx-auto p-4 max-w-6xl space-y-8">
@@ -80,7 +101,7 @@ function App() {
           value={prompt} 
           onChange={setPrompt} 
           onSubmit={handleSubmit}
-          disabled={loading || selectedIds.length === 0}
+          disabled={isAnyLoading || selectedIds.length === 0}
         />
       </div>
 
@@ -89,7 +110,7 @@ function App() {
         <ResponseGrid 
           selectedLLMs={llms.filter(l => selectedIds.includes(l.llm_id))}
           responses={responses}
-          loading={loading}
+          loadingStates={loadingStates}
         />
       </div>
     </div>

@@ -9,8 +9,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from competing_llm.backend.api.chat import router as chat_router
 from competing_llm.backend.configuration.config import config
+from competing_llm.backend.routers.chat import router as chat_router
+from competing_llm.backend.routers.chat_v2 import router as chat_v2_router
 
 # Configure logging
 logging.basicConfig(level=getattr(logging, config.log_level), format=config.log_format)
@@ -49,6 +50,7 @@ app.add_middleware(
 
 # Include API routers
 app.include_router(chat_router)
+app.include_router(chat_v2_router)
 
 
 @app.get("/")

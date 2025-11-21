@@ -5,8 +5,8 @@ import { Badge } from "@/components/ui/badge"
 
 interface LLMSelectorProps {
   llms: LLMInfo[];
-  selectedIds: number[];
-  onToggle: (id: number) => void;
+  selectedIds: string[];
+  onToggle: (id: string) => void;
 }
 
 export function LLMSelector({ llms, selectedIds, onToggle }: LLMSelectorProps) {
@@ -27,7 +27,11 @@ export function LLMSelector({ llms, selectedIds, onToggle }: LLMSelectorProps) {
               >
                 {llm.name}
               </Label>
+              {llm.reasoning_model && (
+                <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-800 hover:bg-purple-200">Reasoning</Badge>
+              )}
               <Badge variant="secondary" className="text-xs">{llm.speed_rating}</Badge>
+              <Badge variant="outline" className="text-xs">{llm.provider}</Badge>
             </div>
             <p className="text-sm text-muted-foreground">
               {llm.description}
@@ -38,4 +42,3 @@ export function LLMSelector({ llms, selectedIds, onToggle }: LLMSelectorProps) {
     </div>
   );
 }
-
