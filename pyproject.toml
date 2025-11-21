@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.121.0",
+    "openai[aiohttp]>=2.8.1",
     "pydantic>=2.12.3",
     "pydantic-settings>=2.12.0",
     "sse-starlette>=3.0.3",
@@ -22,8 +23,8 @@ dev = [
     "pytest>=8.4.2",
     "pytest-asyncio>=1.2.0",
 ]
-
-
+[project.scripts]
+app = "competing_llm.backend.app:app"
 
 [tool.pytest.ini_options]
 testpaths = ["competing_llm/backend/tests"]
@@ -31,3 +32,7 @@ asyncio_mode = "auto"
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+
+[config.default]
+azure_openai_api_version = "2025-04-01-preview"
+llm_model = "gpt-4.1"
