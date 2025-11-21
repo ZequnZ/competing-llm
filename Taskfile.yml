@@ -1,0 +1,61 @@
+version: '3'
+
+vars:
+  TESTDIR: test
+
+tasks:
+  linter-watch:
+    desc: Run ruff linter in the watched mode.
+    cmds:
+      - uv run ruff check . --watch
+
+  linter:
+    desc: Run ruff linter and fix the suggested changes.
+    cmds:
+      - uv run ruff check . --fix --verbose
+
+  formatter:
+    desc: Run ruff formatter to clean up the codebase.
+    cmds:
+      - uv run ruff format . --verbose
+
+  checker:
+    desc: Run type checker.
+    cmds:
+      - uv run mypy . --check-untyped-defs
+
+  run-test:
+    desc: Run tests(unit, integration and more...) in TESTDIR(default=tests) folder
+    dir: '{{ .USER_WORKING_DIR }}'
+    cmds:
+      - uv run pytest ./src/{{ .TESTDIR }} -sv --durations=0
+
+  precommit:
+    desc: Run pre-commit
+    cmds:
+      - uv run pre-commit run
+
+  check_updatable_libs:
+    desc: Run uv to see if libs can be updated
+    cmds:
+      - uv tree --outdated
+
+  dc-up:
+    desc: Start docker compose services, given PROFILE=<PROFILE_NAME>, BUILD=<--build>/<--no-build>
+    vars:
+      BUILD: '{{ .BUILD | default "--no-build" }}'
+      PROFILE: '{{ .PROFILE | default "pyproj" }}'
+    cmds:
+      - docker compose --profile {{.PROFILE}} up {{ .BUILD }}
+
+  dc-exec:
+    desc: Execute command in the running container, given SERVICE=<SERVICE_NAME>, CMD=<COMMAND>, if only one container is running, it will be selected automatically.
+    vars:
+      LATEST_SERVICE_CONTAINER_ID:
+        sh: docker ps -q --filter status=running -l
+      GIVEN_SERVICE_CONTAINER_ID:
+        sh: docker ps -q --filter status=running --filter name={{ .SERVICE }} -l
+      SERVICE_CONTAINER_ID: '{{ .GIVEN_SERVICE_CONTAINER_ID | default .LATEST_SERVICE_CONTAINER_ID }}'
+      CMD: '{{ .CMD | default "bash" }}'
+    cmds:
+      - docker exec -it {{ .SERVICE_CONTAINER_ID }} {{ .CMD }}
