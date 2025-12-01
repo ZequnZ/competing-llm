@@ -105,7 +105,7 @@ class Settings(BasicSettings):
         [
             "http://localhost:3000",
             "http://localhost:5173",
-            "https://competing-llm.vercel.app/",
+            "https://competing-llm.vercel.app",
         ],
         description="Allowed CORS origins",
     )
