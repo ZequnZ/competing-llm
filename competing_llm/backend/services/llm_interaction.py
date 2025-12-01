@@ -1,25 +1,25 @@
 import asyncio
 import logging
-from typing import List, Optional
+from typing import List
 
 from competing_llm.backend.configuration.model_registry import get_llm_info
-from competing_llm.backend.models.schema import ChatResponse
+from competing_llm.backend.models.schema import ChatResponse, LLMSelection
 from competing_llm.backend.utils.llm_utils import create_async_llm_client
 
 logger = logging.getLogger(__name__)
 
-async def get_chat_completion(llm_id: str, prompt: str) -> ChatResponse:
+async def get_chat_completion(llm_id: str, api_provider: str, prompt: str) -> ChatResponse:
     """
     Get a chat completion from a specific LLM.
     
     Args:
         llm_id: The model identifier (deployment name)
         prompt: The user prompt
-        
+        api_provider: The API provider (Azure OpenAI or OpenRouter)
     Returns:
         ChatResponse object containing the response content or error
     """
-    client = create_async_llm_client()
+    client = create_async_llm_client(api_provider)
     
     try:
         messages = [{"role": "user", "content": prompt}]
@@ -60,19 +60,24 @@ async def get_chat_completion(llm_id: str, prompt: str) -> ChatResponse:
         await client.close()
 
 
-async def get_batch_chat_completion(llm_ids: List[str], prompt: str) -> List[ChatResponse]:
+async def get_batch_chat_completion(
+    llms: List[LLMSelection], prompt: str
+) -> List[ChatResponse]:
     """
     Get chat completions from multiple LLMs in parallel.
     
     Args:
-        llm_ids: List of model identifiers
+        llms: List of model/provider selections
         prompt: The user prompt
         
     Returns:
         List of ChatResponse objects
     """
     # Create tasks for all LLMs
-    tasks = [get_chat_completion(llm_id, prompt) for llm_id in llm_ids]
+    tasks = [
+        get_chat_completion(selection.llm_id, selection.api_provider, prompt)
+        for selection in llms
+    ]
     
     # Run tasks concurrently
     results = await asyncio.gather(*tasks)

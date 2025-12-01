@@ -71,6 +71,7 @@ class SourceSettings(BaseSettings):
         # Orders of sources show the priority of the sources, the earlier the higher priority.
         return (
             CliSettingsSource(settings_cls, cli_parse_args=get_cli_parse_args()),
+            dotenv_settings,
             env_settings,
             PyprojectTomlConfigSettingsSource(settings_cls),
             PyprojectTomlDefaultConfigSettingsSource(settings_cls),
@@ -94,4 +95,6 @@ class BasicSettings(SourceSettings):
         ),
         pyproject_toml_default_table_header=("config", "default"),
         extra="ignore",
+        env_file='.env', 
+        env_file_encoding='utf-8',
     )

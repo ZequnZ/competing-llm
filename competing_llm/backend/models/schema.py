@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 class LLMInfo(BaseModel):
@@ -9,6 +9,9 @@ class LLMInfo(BaseModel):
 
     llm_id: str = Field(..., description="LLM model identifier (e.g., 'gpt-4.1')")
     provider: str = Field(..., description="LLM provider (e.g., 'Azure OpenAI')")
+    api_provider: str = Field(
+        ..., description="API provider (e.g., 'Azure OpenAI' or 'OpenRouter')"
+    )
     name: str = Field(..., description="Human-readable LLM name")
     description: str = Field(..., description="LLM description and capabilities")
     avg_response_length: str = Field(..., description="Typical response length range")
@@ -30,13 +33,19 @@ class LLMListResponse(BaseModel):
     total_count: int = Field(..., description="Total number of available LLMs")
 
 
+class LLMSelection(BaseModel):
+    """LLM selection pairing an identifier with its API provider."""
+
+    llm_id: str = Field(..., description="LLM model identifier")
+    api_provider: str = Field(..., description="API provider for the LLM")
+
+
 class ChatRequest(BaseModel):
     """Request model for single chat completion."""
 
-    prompt: str = Field(
-        ..., description="User's input prompt", min_length=1
-    )
+    prompt: str = Field(..., description="User's input prompt", min_length=1)
     llm_id: str = Field(..., description="LLM model identifier")
+    api_provider: str = Field(..., description="API provider for the LLM")
     
     @field_validator("prompt")
     @classmethod
@@ -49,11 +58,9 @@ class ChatRequest(BaseModel):
 class BatchChatRequest(BaseModel):
     """Request model for batch chat completions."""
 
-    prompt: str = Field(
-        ..., description="User's input prompt", min_length=1
-    )
-    llm_ids: List[str] = Field(
-        ..., description="List of LLM model identifiers", min_items=1
+    prompt: str = Field(..., description="User's input prompt", min_length=1)
+    llms: List[LLMSelection] = Field(
+        ..., description="List of LLM/API provider pairs", min_items=1
     )
 
     @field_validator("prompt")
@@ -62,6 +69,13 @@ class BatchChatRequest(BaseModel):
         if not v or not v.strip():
             raise ValueError("Prompt cannot be empty or just whitespace")
         return v.strip()
+
+    @field_validator("llms")
+    @classmethod
+    def validate_llms(cls, value):
+        if not value:
+            raise ValueError("At least one LLM selection must be provided")
+        return value
 
 
 class ChatResponse(BaseModel):
@@ -78,3 +92,51 @@ class BatchChatResponse(BaseModel):
 
     responses: List[ChatResponse] = Field(..., description="List of chat responses")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
+
+
+class AuthTokens(BaseModel):
+    """Bearer token bundle returned by Supabase."""
+
+    access_token: str = Field(..., description="JWT used for authenticated requests")
+    refresh_token: str = Field(..., description="Token used to refresh the session")
+    token_type: str = Field("bearer", description="Token type, defaults to bearer")
+    expires_in: Optional[int] = Field(
+        None, description="Number of seconds until the token expires"
+    )
+    expires_at: Optional[datetime] = Field(
+        None, description="UTC timestamp when the token expires"
+    )
+
+
+class AuthLoginRequest(BaseModel):
+    """Payload for email/password login."""
+
+    email: EmailStr = Field(..., description="User email address")
+    password: str = Field(..., description="Supabase user password", min_length=6)
+
+
+class AuthRefreshRequest(BaseModel):
+    """Payload used to refresh a Supabase session."""
+
+    refresh_token: str = Field(..., description="Refresh token issued during login")
+
+
+class AuthLogoutRequest(BaseModel):
+    """Payload used to revoke an access token."""
+
+    access_token: str = Field(..., description="Access token to revoke")
+
+
+class AuthResponse(BaseModel):
+    """Login response containing identity and token bundle."""
+
+    user_id: str = Field(..., description="Supabase user identifier")
+    email: EmailStr = Field(..., description="User email")
+    tokens: AuthTokens = Field(..., description="Bearer tokens for subsequent calls")
+
+
+class AuthLogoutResponse(BaseModel):
+    """Response returned after logging out."""
+
+    revoked: bool = Field(..., description="Indicates whether the token was revoked")
+    message: str = Field(..., description="Human readable status message")

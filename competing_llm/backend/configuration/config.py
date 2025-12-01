@@ -106,6 +106,16 @@ class Settings(BasicSettings):
         description="Allowed CORS origins",
     )
 
+    # Supabase settings
+    supabase_url: str = Field(
+        "", alias="SUPABASE_URL", description="Supabase project URL used for authentication"
+    )
+    supabase_service_role_key: SecretStr = Field(
+        default=SecretStr(""),
+        alias="SUPABASE_SERVICE_ROLE_KEY",
+        description="Supabase service role key for privileged server-side auth",
+    )
+
     # Logging settings
     log_level: str = Field("INFO", description="Logging level")
     log_format: str = Field(
@@ -124,6 +134,15 @@ class Settings(BasicSettings):
     azure_openai_api_version: str = Field(
         default="2025-04-01-preview", description="azure_openai_api_version"
     )
+    openrouter_base_url: SecretStr = Field(
+        default=SecretStr("https://openrouter.ai/api/v1"),
+        description="openrouter_base_url",
+    )
+    openrouter_api_key: SecretStr = Field(
+        default=SecretStr(""),
+        description="openrouter_api_key",
+    )
 
 
 config = Settings()
+print(config.model_dump_json(indent=2))

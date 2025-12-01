@@ -4,6 +4,16 @@ vars:
   TESTDIR: test
 
 tasks:
+  frontend-dev:
+    desc: Run frontend development server
+    cmds:
+      - cd frontend && npm run dev
+
+  backend-dev:
+    desc: Run backend development server
+    cmds:
+      - uv run python competing_llm/backend/app.py
+
   linter-watch:
     desc: Run ruff linter in the watched mode.
     cmds:
