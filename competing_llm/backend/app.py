@@ -10,12 +10,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from competing_llm.backend.configuration.config import config
+from competing_llm.backend.configuration.logger_config import base_log_config
+from competing_llm.backend.routers.auth import router as auth_router
 from competing_llm.backend.routers.chat import router as chat_router
 from competing_llm.backend.routers.chat_v2 import router as chat_v2_router
 
 # Configure logging
-logging.basicConfig(level=getattr(logging, config.log_level), format=config.log_format)
-
+logging.config.dictConfig(base_log_config)
 logger = logging.getLogger(__name__)
 
 
@@ -49,6 +50,7 @@ app.add_middleware(
 )
 
 # Include API routers
+app.include_router(auth_router)
 app.include_router(chat_router)
 app.include_router(chat_v2_router)
 

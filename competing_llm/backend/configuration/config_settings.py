@@ -95,6 +95,6 @@ class BasicSettings(SourceSettings):
         ),
         pyproject_toml_default_table_header=("config", "default"),
         extra="ignore",
-        env_file='.env', 
-        env_file_encoding='utf-8',
+        env_file=".env",
+        env_file_encoding="utf-8",
     )

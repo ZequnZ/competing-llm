@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from typing import List
 
 from competing_llm.backend.configuration.model_registry import get_llm_info
 from competing_llm.backend.models.schema import ChatResponse, LLMSelection
@@ -8,10 +7,13 @@ from competing_llm.backend.utils.llm_utils import create_async_llm_client
 
 logger = logging.getLogger(__name__)
 
-async def get_chat_completion(llm_id: str, api_provider: str, prompt: str) -> ChatResponse:
+
+async def get_chat_completion(
+    llm_id: str, api_provider: str, prompt: str
+) -> ChatResponse:
     """
     Get a chat completion from a specific LLM.
-    
+
     Args:
         llm_id: The model identifier (deployment name)
         prompt: The user prompt
@@ -20,14 +22,14 @@ async def get_chat_completion(llm_id: str, api_provider: str, prompt: str) -> Ch
         ChatResponse object containing the response content or error
     """
     client = create_async_llm_client(api_provider)
-    
+
     try:
         messages = [{"role": "user", "content": prompt}]
-        
+
         # Determine model configuration
         llm_info = get_llm_info(llm_id)
         is_reasoning = llm_info.reasoning_model if llm_info else False
-        
+
         if is_reasoning:
             # Reasoning models use the Responses API
             kwargs = {
@@ -45,31 +47,29 @@ async def get_chat_completion(llm_id: str, api_provider: str, prompt: str) -> Ch
                 "temperature": 0.7,
             }
             response = await client.chat.completions.create(**kwargs)
-        
+
             content = response.choices[0].message.content
         return ChatResponse(llm_id=llm_id, content=content)
-        
+
     except Exception as e:
         logger.error(f"Error calling LLM {llm_id}: {str(e)}")
         return ChatResponse(
-            llm_id=llm_id, 
-            content="", 
-            error=f"Failed to generate response: {str(e)}"
+            llm_id=llm_id, content="", error=f"Failed to generate response: {str(e)}"
         )
     finally:
         await client.close()
 
 
 async def get_batch_chat_completion(
-    llms: List[LLMSelection], prompt: str
-) -> List[ChatResponse]:
+    llms: list[LLMSelection], prompt: str
+) -> list[ChatResponse]:
     """
     Get chat completions from multiple LLMs in parallel.
-    
+
     Args:
         llms: List of model/provider selections
         prompt: The user prompt
-        
+
     Returns:
         List of ChatResponse objects
     """
@@ -78,8 +78,8 @@ async def get_batch_chat_completion(
         get_chat_completion(selection.llm_id, selection.api_provider, prompt)
         for selection in llms
     ]
-    
+
     # Run tasks concurrently
     results = await asyncio.gather(*tasks)
-    
+
     return list(results)

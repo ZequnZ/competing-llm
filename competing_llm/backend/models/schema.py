@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List, Optional
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
@@ -29,7 +28,7 @@ class LLMInfo(BaseModel):
 class LLMListResponse(BaseModel):
     """Response containing information about all available LLMs."""
 
-    llms: List[LLMInfo] = Field(..., description="List of available LLMs")
+    llms: list[LLMInfo] = Field(..., description="List of available LLMs")
     total_count: int = Field(..., description="Total number of available LLMs")
 
 
@@ -46,7 +45,7 @@ class ChatRequest(BaseModel):
     prompt: str = Field(..., description="User's input prompt", min_length=1)
     llm_id: str = Field(..., description="LLM model identifier")
     api_provider: str = Field(..., description="API provider for the LLM")
-    
+
     @field_validator("prompt")
     @classmethod
     def validate_prompt(cls, v):
@@ -59,7 +58,7 @@ class BatchChatRequest(BaseModel):
     """Request model for batch chat completions."""
 
     prompt: str = Field(..., description="User's input prompt", min_length=1)
-    llms: List[LLMSelection] = Field(
+    llms: list[LLMSelection] = Field(
         ..., description="List of LLM/API provider pairs", min_items=1
     )
 
@@ -83,15 +82,19 @@ class ChatResponse(BaseModel):
 
     llm_id: str = Field(..., description="LLM model identifier")
     content: str = Field(..., description="Generated content")
-    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
-    error: Optional[str] = Field(None, description="Error message if failed")
+    timestamp: datetime = Field(
+        default_factory=datetime.utcnow, description="Response timestamp"
+    )
+    error: str | None = Field(None, description="Error message if failed")
 
 
 class BatchChatResponse(BaseModel):
     """Response model for batch chat completions."""
 
-    responses: List[ChatResponse] = Field(..., description="List of chat responses")
-    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
+    responses: list[ChatResponse] = Field(..., description="List of chat responses")
+    timestamp: datetime = Field(
+        default_factory=datetime.utcnow, description="Response timestamp"
+    )
 
 
 class AuthTokens(BaseModel):
@@ -100,10 +103,10 @@ class AuthTokens(BaseModel):
     access_token: str = Field(..., description="JWT used for authenticated requests")
     refresh_token: str = Field(..., description="Token used to refresh the session")
     token_type: str = Field("bearer", description="Token type, defaults to bearer")
-    expires_in: Optional[int] = Field(
+    expires_in: int | None = Field(
         None, description="Number of seconds until the token expires"
     )
-    expires_at: Optional[datetime] = Field(
+    expires_at: datetime | None = Field(
         None, description="UTC timestamp when the token expires"
     )
 

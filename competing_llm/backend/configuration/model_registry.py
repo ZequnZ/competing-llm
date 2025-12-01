@@ -46,10 +46,10 @@ AVAILABLE_LLMS = [
 
 VALID_LLM_IDS = {llm.llm_id for llm in AVAILABLE_LLMS}
 
+
 def get_llm_info(llm_id: str) -> LLMInfo | None:
     """Get LLM info by ID."""
     for llm in AVAILABLE_LLMS:
         if llm.llm_id == llm_id:
             return llm
     return None
-

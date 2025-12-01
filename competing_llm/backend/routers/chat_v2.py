@@ -1,5 +1,4 @@
 import logging
-from typing import List
 
 from fastapi import APIRouter, HTTPException
 
@@ -13,7 +12,6 @@ from competing_llm.backend.models.schema import (
     BatchChatResponse,
     ChatRequest,
     ChatResponse,
-    LLMInfo,
     LLMListResponse,
 )
 from competing_llm.backend.services.llm_interaction import (
@@ -41,8 +39,8 @@ async def chat_completion(request: ChatRequest) -> ChatResponse:
     """
     if request.llm_id not in VALID_LLM_IDS:
         raise HTTPException(
-            status_code=400, 
-            detail=f"Invalid LLM ID. Available: {', '.join(sorted(VALID_LLM_IDS))}"
+            status_code=400,
+            detail=f"Invalid LLM ID. Available: {', '.join(sorted(VALID_LLM_IDS))}",
         )
 
     llm_info = get_llm_info(request.llm_id)
@@ -71,11 +69,13 @@ async def batch_chat_completion(request: BatchChatRequest) -> BatchChatResponse:
     """
     # Validate all LLM IDs
     invalid_ids = [
-        selection.llm_id for selection in request.llms if selection.llm_id not in VALID_LLM_IDS
+        selection.llm_id
+        for selection in request.llms
+        if selection.llm_id not in VALID_LLM_IDS
     ]
     if invalid_ids:
         raise HTTPException(
-            status_code=400, 
+            status_code=400,
             detail=(
                 f"Invalid LLM IDs: {', '.join(invalid_ids)}. "
                 f"Available: {', '.join(sorted(VALID_LLM_IDS))}"

@@ -108,7 +108,9 @@ class Settings(BasicSettings):
 
     # Supabase settings
     supabase_url: str = Field(
-        "", alias="SUPABASE_URL", description="Supabase project URL used for authentication"
+        "",
+        alias="SUPABASE_URL",
+        description="Supabase project URL used for authentication",
     )
     supabase_service_role_key: SecretStr = Field(
         default=SecretStr(""),
