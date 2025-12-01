@@ -30,7 +30,7 @@ export interface BatchChatResponse {
 
 // In a real app, this should be an environment variable
 // const API_URL = 'http://localhost:8000';
-const API_URL = 'https://competing-llm-arena.vercel.app/';
+const API_URL = 'https://competing-llm-arena.vercel.app';
 
 export interface AuthTokens {
   access_token: string;
