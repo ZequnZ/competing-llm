@@ -102,7 +102,11 @@ class Settings(BasicSettings):
 
     # CORS settings
     cors_origins: list[str] = Field(
-        ["http://localhost:3000", "http://localhost:5173"],
+        [
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "https://competing-llm.vercel.app/",
+        ],
         description="Allowed CORS origins",
     )
 
